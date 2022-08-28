@@ -1,59 +1,66 @@
-class Calculator:
+import requests
+import validations
+
+
+class calculator:
+
     def __init__(self, number):
-        self.number = self.validate_int(number)
-        self.initial = self.validate_int(number)
-        self.saved = []
-
-    def add(self, number):
-        self.number += number
-        self.saved.append(('+', number))
-        return self
-
-    def minus(self, number):
-        self.number -= number
-        self.saved.append(('-', number))
-        return self
+        self.memory = []
+        self.number = validations.is_int(number)
+        self.first = validations.is_int(number)
 
     def mult(self, number):
+        number = validations.is_int(number)
         self.number *= number
-        self.saved.append(('*', number))
+        self.memory.append(('*', number))
         return self
 
-    def dvid(self, number):
+    def div(self, number):
+        number = validations.is_int(number)
         self.number /= number
-        self.saved.append(('/', number))
+        self.memory.append(('/', number))
         return self
 
-    def get_results(self):
-        return self.number
+    def sub(self, number):
+        number = validations.is_int(number)
+        self.number -= number
+        self.memory.append(('-', number))
+        return self
 
-    def validate_int(self, k):
-        if type(k) != int:
-            raise Exception('you should use a number')
-        return k
-
-    def printing(self):
-        equation = f"{self.initial}"
-        for opTuple in self.saved:
-            equation += f" {opTuple[0]} {opTuple[1]}"
-        equation += f" = {self.number}"
-
-        return equation
+    def add(self, number):
+        number = validations.is_int(number)
+        self.number += number
+        self.memory.append(('+', number))
+        return self
 
     def back(self, number):
-        for _ in range(number):
-            k = self.saved.pop()
-            print(self.saved)
-            if k[0] == '+':
-                self.number -= k[1]
-            if k[0] == '-':
-                self.number += k[1]
-            if k[0] == '/':
-                self.number *= k[1]
-            if k[0] == '*':
-                self.number /= k[1]
-        return self
+        number = validations.is_int(number)
+        number = round(validations.less_than_one(number))
+        if number > len(self.memory):
+            raise Exception(
+                f"you are asking to go back more than available operations please select a number less than {len(self.memory)} operations")
+        else:
+            for number in range(len(self.memory)):
+                x = self.memory.pop()
+                if x[0] == '*':
+                    self.number /= x[1]
+                if x[0] == '/':
+                    self.number *= x[1]
+                if x[0] == '+':
+                    self.number -= x[1]
+                if x[0] == '-':
+                    self.number += x[1]
+                return self
+
+    def print_and_facts(self):
+        equation = f"{self.first}"
+        for x in self.memory:
+            equation += f" {x[0]} {x[1]}"
+        equation += f" = {self.number}"
+        print(equation)
+
+        fact = requests.get(f"http://numbersapi.com/{self.number}/trivia").text
+        print(f"some facts about the number {self.number}: \n {fact}")
 
 
-calc1 = Calculator(1).add(4).minus(1).mult(5).back(2)
-print(calc1.printing())
+x = calculator(5).mult(5).sub(6).mult(3).add(1).back(1).print_and_facts()
